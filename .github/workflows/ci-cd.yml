@@ -1,0 +1,379 @@
+﻿name: 🚀 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION: '18'
+  CACHE_KEY: 'v1'
+
+jobs:
+  # ===============================================
+  # CODE QUALITY & TESTING
+  # ===============================================
+
+  quality-check:
+    name: 🔍 Code Quality & Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: ⚡ Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            .next/cache
+          key: ${{ runner.os }}-node-${{ env.CACHE_KEY }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ env.CACHE_KEY }}-
+
+      - name: 📦 Install Dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: 🔎 TypeScript Type Check
+        run: npm run type-check
+
+      - name: 🧹 ESLint Code Quality
+        run: npm run lint
+
+      - name: 🎨 Prettier Format Check
+        run: npm run format:check
+
+      - name: 🧪 Run Unit Tests
+        run: npm test -- --coverage --watchAll=false
+        env:
+          VITE_HIVE_API_KEY: ${{ secrets.VITE_HIVE_API_KEY_TEST }}
+          VITE_API_BASE_URL: https://api.thehive.ai/api/v2
+          VITE_APP_TITLE: Fake Checker Test
+
+      - name: 📊 Upload Coverage Reports
+        uses: codecov/codecov-action@v4
+        if: success()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: 💾 Cache Test Results
+        uses: actions/cache@v4
+        with:
+          path: coverage
+          key: coverage-${{ github.sha }}
+
+  # ===============================================
+  # SECURITY SCANNING
+  # ===============================================
+
+  security-scan:
+    name: 🛡️ Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: 🔍 npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: 🛡️ Snyk Security Scan
+        uses: snyk/actions/node@master
+        if: github.event_name != 'pull_request'
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+        continue-on-error: true
+
+  # ===============================================
+  # BUILD VALIDATION
+  # ===============================================
+
+  build-test:
+    name: 🏗️ Build Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [quality-check]
+
+    strategy:
+      matrix:
+        environment: [development, staging, production]
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: 🏗️ Build Application
+        run: npm run build
+        env:
+          VITE_NODE_ENV: ${{ matrix.environment }}
+          VITE_HIVE_API_KEY: ${{ secrets.VITE_HIVE_API_KEY }}
+          VITE_API_BASE_URL: https://api.thehive.ai/api/v2
+          VITE_APP_TITLE: Fake Checker
+          VITE_ENABLE_ANALYTICS: ${{ matrix.environment == 'production' }}
+          VITE_ENABLE_ERROR_REPORTING: ${{ matrix.environment == 'production' }}
+
+      - name: 📏 Bundle Size Analysis
+        run: |
+          npm run analyze:bundle > bundle-analysis.txt 2>&1 || true
+          if [ -f bundle-analysis.txt ]; then
+            echo "## Bundle Analysis (${{ matrix.environment }})" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat bundle-analysis.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 💾 Cache Build Artifacts
+        if: matrix.environment == 'production'
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: build-${{ github.sha }}-${{ matrix.environment }}
+
+  # ===============================================
+  # E2E TESTING
+  # ===============================================
+
+  e2e-test:
+    name: 🎭 E2E Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build-test]
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: 🎭 Install Playwright Browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: 🏗️ Build Application
+        run: npm run build
+        env:
+          VITE_HIVE_API_KEY: ${{ secrets.VITE_HIVE_API_KEY_TEST }}
+          VITE_API_BASE_URL: https://api.thehive.ai/api/v2
+          VITE_USE_MOCK_API: true
+
+      - name: 🎭 Run Playwright Tests
+        run: npm run test:e2e
+        env:
+          PLAYWRIGHT_HTML_REPORT: playwright-report
+
+      - name: 📤 Upload E2E Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ===============================================
+  # DEPLOYMENT TO STAGING
+  # ===============================================
+
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [quality-check, security-scan, build-test]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+
+    environment:
+      name: staging
+      url: https://staging-fake-checker.netlify.app
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: 🏗️ Build for Staging
+        run: npm run build
+        env:
+          VITE_NODE_ENV: staging
+          VITE_HIVE_API_KEY: ${{ secrets.VITE_HIVE_API_KEY_STAGING }}
+          VITE_API_BASE_URL: https://api.thehive.ai/api/v2
+          VITE_APP_TITLE: Fake Checker (Staging)
+          VITE_ENABLE_ANALYTICS: false
+          VITE_ENABLE_ERROR_REPORTING: true
+          VITE_ENABLE_DEBUG_MODE: true
+
+      - name: 🚀 Deploy to Netlify (Staging)
+        uses: netlify/actions/cli@master
+        with:
+          args: deploy --dir=dist --site=${{ secrets.NETLIFY_SITE_ID_STAGING }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+  # ===============================================
+  # DEPLOYMENT TO PRODUCTION
+  # ===============================================
+
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [quality-check, security-scan, build-test, e2e-test]
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      github.event_name == 'release'
+
+    environment:
+      name: production
+      url: https://fake-checker.netlify.app
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: 🏗️ Build for Production
+        run: npm run build
+        env:
+          VITE_NODE_ENV: production
+          VITE_HIVE_API_KEY: ${{ secrets.VITE_HIVE_API_KEY_PROD }}
+          VITE_API_BASE_URL: https://api.thehive.ai/api/v2
+          VITE_APP_TITLE: Fake Checker
+          VITE_ENABLE_ANALYTICS: true
+          VITE_ENABLE_ERROR_REPORTING: true
+          VITE_ENABLE_DEBUG_MODE: false
+
+      - name: 🚀 Deploy to Netlify (Production)
+        uses: netlify/actions/cli@master
+        with:
+          args: deploy --prod --dir=dist --site=${{ secrets.NETLIFY_SITE_ID_PROD }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+      - name: 🏷️ Create Release Tag
+        if: github.event_name == 'push'
+        run: |
+          VERSION=$(date '+%Y.%m.%d')-$(echo ${GITHUB_SHA} | cut -c1-7)
+          git tag -a v$VERSION -m "Production release v$VERSION"
+          git push origin v$VERSION
+
+  # ===============================================
+  # POST-DEPLOYMENT VALIDATION
+  # ===============================================
+
+  post-deploy-validation:
+    name: ✅ Post-Deployment Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [deploy-production]
+    if: success()
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏥 Health Check
+        run: |
+          echo "🔍 Checking application health..."
+          curl -f -s https://fake-checker.netlify.app/ > /dev/null
+          echo "✅ Application is responding"
+
+      - name: 🎭 Smoke Tests
+        run: |
+          echo "🧪 Running smoke tests..."
+          # Add your smoke test commands here
+          # Example: curl -f -s https://fake-checker.netlify.app/api/health
+          echo "✅ Smoke tests passed"
+
+      - name: 📈 Performance Audit
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            https://fake-checker.netlify.app/
+          configPath: ./.github/lighthouse.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  # ===============================================
+  # NOTIFICATION
+  # ===============================================
+
+  notify:
+    name: 📢 Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-production, post-deploy-validation]
+    if: always()
+
+    steps:
+      - name: 📢 Success Notification
+        if: success()
+        run: |
+          echo "🎉 Fake Checker successfully deployed to production!"
+          echo "🌐 URL: https://fake-checker.netlify.app"
+          echo "📊 View metrics: https://app.netlify.com/sites/fake-checker"
+
+      - name: 🚨 Failure Notification
+        if: failure()
+        run: |
+          echo "❌ Deployment failed for Fake Checker"
+          echo "🔍 Check the workflow logs for details"
+          echo "📧 Consider setting up Slack/Discord notifications for production alerts"

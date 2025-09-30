@@ -1,0 +1,370 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Motion control variables - defaults for normal motion */
+  --motion-duration: 0.25s;
+  --motion-easing: ease-in-out;
+  --motion-transform: scale(1);
+  --motion-opacity: 1;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color var(--motion-duration) var(--motion-easing);
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* High Contrast Mode Styles */
+.high-contrast {
+  /* Enhanced contrast for text and backgrounds */
+  --hc-bg-primary: #000000;
+  --hc-bg-secondary: #ffffff;
+  --hc-text-primary: #ffffff;
+  --hc-text-secondary: #000000;
+  --hc-border: #ffffff;
+  --hc-focus: #ffff00;
+  --hc-link: #00ffff;
+  --hc-link-hover: #ff00ff;
+  --hc-success: #00ff00;
+  --hc-error: #ff0000;
+  --hc-warning: #ffff00;
+  --hc-info: #00ffff;
+}
+
+/* Apply high contrast styles when class is present */
+.high-contrast body {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-text-primary) !important;
+}
+
+/* MUI Component overrides for high contrast */
+.high-contrast .MuiPaper-root {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-text-primary) !important;
+  border: 2px solid var(--hc-border) !important;
+}
+
+.high-contrast .MuiAppBar-root {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-text-primary) !important;
+  border-bottom: 3px solid var(--hc-border) !important;
+}
+
+.high-contrast .MuiButton-root {
+  background-color: var(--hc-bg-secondary) !important;
+  color: var(--hc-text-secondary) !important;
+  border: 2px solid var(--hc-text-secondary) !important;
+  font-weight: bold !important;
+}
+
+.high-contrast .MuiButton-root:hover {
+  background-color: var(--hc-text-secondary) !important;
+  color: var(--hc-bg-secondary) !important;
+  border: 2px solid var(--hc-bg-secondary) !important;
+}
+
+.high-contrast .MuiButton-contained {
+  background-color: var(--hc-text-secondary) !important;
+  color: var(--hc-bg-primary) !important;
+}
+
+.high-contrast .MuiButton-outlined {
+  background-color: transparent !important;
+  color: var(--hc-text-primary) !important;
+  border: 2px solid var(--hc-text-primary) !important;
+}
+
+.high-contrast .MuiTextField-root .MuiOutlinedInput-root {
+  background-color: var(--hc-bg-secondary) !important;
+  color: var(--hc-text-secondary) !important;
+}
+
+.high-contrast .MuiTextField-root .MuiOutlinedInput-root fieldset {
+  border: 2px solid var(--hc-text-secondary) !important;
+}
+
+.high-contrast .MuiTextField-root .MuiOutlinedInput-root:hover fieldset {
+  border: 3px solid var(--hc-text-secondary) !important;
+}
+
+.high-contrast .MuiTextField-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border: 3px solid var(--hc-focus) !important;
+}
+
+.high-contrast .MuiInputLabel-root {
+  color: var(--hc-text-primary) !important;
+  font-weight: bold !important;
+}
+
+.high-contrast .MuiInputLabel-root.Mui-focused {
+  color: var(--hc-focus) !important;
+}
+
+.high-contrast .MuiCard-root {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-text-primary) !important;
+  border: 3px solid var(--hc-border) !important;
+}
+
+.high-contrast .MuiTypography-root {
+  color: inherit !important;
+}
+
+.high-contrast .MuiTypography-colorTextSecondary {
+  color: var(--hc-text-primary) !important;
+  opacity: 0.8 !important;
+}
+
+.high-contrast .MuiIconButton-root {
+  color: var(--hc-text-primary) !important;
+  border: 1px solid var(--hc-border) !important;
+  background-color: transparent !important;
+}
+
+.high-contrast .MuiIconButton-root:hover {
+  background-color: var(--hc-text-primary) !important;
+  color: var(--hc-bg-primary) !important;
+}
+
+.high-contrast .MuiSwitch-root .MuiSwitch-track {
+  background-color: var(--hc-text-primary) !important;
+  border: 2px solid var(--hc-text-primary) !important;
+}
+
+.high-contrast .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: var(--hc-bg-secondary) !important;
+  border: 2px solid var(--hc-text-secondary) !important;
+}
+
+.high-contrast .MuiSwitch-root .Mui-checked .MuiSwitch-thumb {
+  background-color: var(--hc-success) !important;
+  border: 2px solid var(--hc-text-secondary) !important;
+}
+
+.high-contrast .MuiSelect-root {
+  background-color: var(--hc-bg-secondary) !important;
+  color: var(--hc-text-secondary) !important;
+  border: 2px solid var(--hc-text-secondary) !important;
+}
+
+.high-contrast .MuiMenuItem-root {
+  background-color: var(--hc-bg-secondary) !important;
+  color: var(--hc-text-secondary) !important;
+  border-bottom: 1px solid var(--hc-text-secondary) !important;
+}
+
+.high-contrast .MuiMenuItem-root:hover {
+  background-color: var(--hc-text-secondary) !important;
+  color: var(--hc-bg-secondary) !important;
+}
+
+.high-contrast .MuiMenuItem-root.Mui-selected {
+  background-color: var(--hc-focus) !important;
+  color: var(--hc-text-secondary) !important;
+}
+
+/* Links */
+.high-contrast a {
+  color: var(--hc-link) !important;
+  text-decoration: underline !important;
+  font-weight: bold !important;
+}
+
+.high-contrast a:hover {
+  color: var(--hc-link-hover) !important;
+  background-color: var(--hc-text-secondary) !important;
+  padding: 2px 4px !important;
+}
+
+/* Focus indicators */
+.high-contrast *:focus,
+.high-contrast *:focus-visible {
+  outline: 3px solid var(--hc-focus) !important;
+  outline-offset: 2px !important;
+}
+
+/* Alert components */
+.high-contrast .MuiAlert-standardSuccess {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-success) !important;
+  border: 2px solid var(--hc-success) !important;
+}
+
+.high-contrast .MuiAlert-standardError {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-error) !important;
+  border: 2px solid var(--hc-error) !important;
+}
+
+.high-contrast .MuiAlert-standardWarning {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-warning) !important;
+  border: 2px solid var(--hc-warning) !important;
+}
+
+.high-contrast .MuiAlert-standardInfo {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-info) !important;
+  border: 2px solid var(--hc-info) !important;
+}
+
+/* Chip components */
+.high-contrast .MuiChip-root {
+  background-color: var(--hc-text-primary) !important;
+  color: var(--hc-bg-primary) !important;
+  border: 2px solid var(--hc-text-primary) !important;
+  font-weight: bold !important;
+}
+
+/* Dividers */
+.high-contrast .MuiDivider-root {
+  border-color: var(--hc-border) !important;
+  border-width: 2px !important;
+}
+
+/* Toolbar and navigation */
+.high-contrast .MuiToolbar-root {
+  background-color: var(--hc-bg-primary) !important;
+  color: var(--hc-text-primary) !important;
+  border-bottom: 2px solid var(--hc-border) !important;
+}
+
+/* Enhanced borders for better separation */
+.high-contrast .MuiBox-root {
+  border-color: var(--hc-border) !important;
+}
+
+/* Form control labels */
+.high-contrast .MuiFormControlLabel-root .MuiFormControlLabel-label {
+  color: var(--hc-text-primary) !important;
+  font-weight: bold !important;
+}
+
+/* Progress indicators */
+.high-contrast .MuiLinearProgress-root {
+  background-color: var(--hc-text-primary) !important;
+}
+
+.high-contrast .MuiLinearProgress-bar {
+  background-color: var(--hc-focus) !important;
+}
+
+/* Reduce Motion Mode Styles */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+}
+
+/* Disable specific problematic animations */
+.reduce-motion * {
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Preserve essential animations but make them instant */
+.reduce-motion .MuiCircularProgress-root {
+  animation: none !important;
+}
+
+.reduce-motion .MuiLinearProgress-bar {
+  transition: none !important;
+}
+
+/* Disable hover transforms and effects */
+.reduce-motion *:hover {
+  transform: none !important;
+}
+
+/* Disable focus animations but keep focus indicators */
+.reduce-motion *:focus,
+.reduce-motion *:focus-visible {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Respect system preference as well */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}

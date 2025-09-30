@@ -1,0 +1,76 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+*.lcov
+test-results
+playwright-report
+test-results/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.vite/
+.turbo/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# API Keys and secrets (extra safety)
+*.key
+*.pem
+secrets/
+config/production.json
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
