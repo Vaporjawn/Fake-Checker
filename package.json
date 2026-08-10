@@ -37,7 +37,7 @@
     "@mui/material": "^7.3.2",
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.18.0",
-    "lucide-react": "^0.544.0",
+    "lucide-react": "^1.30.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-dropzone": "^14.3.8",
